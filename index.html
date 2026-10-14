@@ -370,14 +370,6 @@
         <input id="email" name="email" type="email" autocomplete="email" maxlength="120" placeholder="you@example.com">
       </div>
 
-      <fieldset class="field" id="guestsField" hidden>
-        <legend>Guests coming with you</legend>
-        <div class="seg">
-          <label><input type="radio" name="guests" value="0" checked><span>Just me</span></label>
-          <label><input type="radio" name="guests" value="1"><span>Me + 1</span></label>
-        </div>
-        <p class="hint" id="guestsHint" hidden></p>
-      </fieldset>
 
       <div class="field">
         <label class="lbl" for="note">A memory or birthday wish <span class="opt">(optional)</span></label>
@@ -395,7 +387,7 @@
       </div>
 
       <button type="submit" class="btn" id="submitBtn"><span id="submitLabel">Send my RSVP</span></button>
-      <p class="fine">Already replied? Send it again with the same WhatsApp number to update your response.</p>
+      <p class="fine">Invitations are personal, so each RSVP is for one guest. Already replied? Send it again with the same WhatsApp number to update your response.</p>
     </form>
 
     <!-- Thank-you view -->
@@ -431,7 +423,6 @@
   ------------------------------------------------------------------- */
   var RSVP_ENDPOINT = "https://script.google.com/macros/s/AKfycbwT-ENQYCNbmynFphW_rjOsPA0tocMZyapVVCEaVss184UEVcWTD2QN6Tg6e3YEqiV_/exec";
   var CAPACITY = 35;
-  var MAX_GUESTS = 1;
   var VENUE = "Blue Flame Media, 3 George St, off Apata Street, Somolu, Lagos";
 
   var PREVIEW = !RSVP_ENDPOINT;
@@ -440,8 +431,6 @@
   var $ = function (id) { return document.getElementById(id); };
   var form = $("rsvp");
   var seatsEl = $("seats");
-  var guestsField = $("guestsField");
-  var guestsHint = $("guestsHint");
   var errBox = $("formError");
   var errText = $("formErrorText");
   var waitlistBtn = $("waitlistBtn");
@@ -474,7 +463,6 @@
   function syncResponse() {
     responseInputs.forEach(function (i) { i.closest(".choice-card").classList.toggle("is-checked", i.checked); });
     var r = currentResponse();
-    guestsField.hidden = r !== "yes";
     if (r) {
       form.querySelectorAll(".choice-card").forEach(function (c) { c.classList.remove("invalid"); });
       responseInputs.forEach(function (i) { i.classList.remove("invalid"); });
@@ -507,22 +495,7 @@
       seatsEl.textContent = "Seating is limited to " + CAPACITY + " guests";
       $("yesSub").textContent = "I'll be there";
     }
-    updateGuestOptions();
     updateSubmitLabel();
-  }
-
-  function updateGuestOptions() {
-    var inputs = form.querySelectorAll('input[name="guests"]');
-    var limited = false;
-    inputs.forEach(function (i) {
-      var party = 1 + Number(i.value);
-      var tooMany = !waitlistMode && remaining !== null && party > remaining;
-      i.disabled = tooMany;
-      if (tooMany) limited = true;
-      if (tooMany && i.checked) { i.checked = false; inputs[0].checked = true; }
-    });
-    guestsHint.hidden = !limited;
-    if (limited) guestsHint.textContent = remaining === 1 ? "Only 1 seat is left, so this RSVP is for you alone." : "Only " + remaining + " seats are left.";
   }
 
   function updateSubmitLabel() {
@@ -583,7 +556,6 @@
 
   /* ---------------- Submit ---------------- */
   function payload(forceWaitlist) {
-    var g = form.querySelector('input[name="guests"]:checked');
     var resp = currentResponse();
     return {
       response: resp,
@@ -591,7 +563,7 @@
       category: currentCategory(),
       phone: $("phone").value.trim(),
       email: $("email").value.trim(),
-      guests: resp === "yes" && g ? Number(g.value) : 0,
+      guests: 0,
       note: $("note").value.trim(),
       website: $("website").value,
       waitlist: !!(forceWaitlist || waitlistMode),
@@ -614,7 +586,7 @@
     if (PREVIEW) {
       return new Promise(function (resolve) {
         setTimeout(function () {
-          var party = data.response === "yes" ? 1 + data.guests : 0;
+          var party = data.response === "yes" ? 1 : 0;
           resolve({ ok: true, status: data.response === "yes" ? (data.waitlist ? "Waitlist" : "Attending") : "Not attending", partySize: party, updated: false, remaining: CAPACITY - party });
         }, 700);
       });
@@ -642,7 +614,7 @@
         }
         applyStatus({ remaining: res.remaining });
         var msg = res.remaining > 0
-          ? "Only " + res.remaining + (res.remaining === 1 ? " seat is" : " seats are") + " left, which isn't enough for your party. Reduce your guests, or join the waitlist."
+          ? "Seats are being held for other guests. You can join the waitlist and we'll reach out if a seat opens."
           : "The studio filled up just now. You can join the waitlist and we'll reach out if a seat opens.";
         showError(msg, true);
       } else {
@@ -679,11 +651,9 @@
 
     if (status === "Attending") {
       title.textContent = "Thank you, " + firstName(data.name);
-      var who = data.guests === 0 ? "for you" : "for you and " + data.guests + (data.guests === 1 ? " guest" : " guests");
-      msg.textContent = updatedPrefix + "Your seat is reserved " + who + ". We look forward to celebrating with you on Sunday.";
+      msg.textContent = updatedPrefix + "Your seat is reserved. We look forward to celebrating with you on Sunday.";
       summary.appendChild(row("Response", "Attending"));
       summary.appendChild(row("Category", labelFor(data.category)));
-      summary.appendChild(row("Party", String(res.partySize || 1 + data.guests)));
       summary.appendChild(row("Date", "Sun, 18 Oct · 3:30–6:00 PM"));
       summary.hidden = false;
       $("doneDirections").hidden = false;

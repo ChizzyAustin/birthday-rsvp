@@ -179,7 +179,7 @@
   .invalid{border-color:#ff9c8a !important}
   .hint{margin:7px 2px 0;font-size:15px;font-style:italic;color:var(--muted)}
 
-  .seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:rgba(36,3,4,.45)}
+  .seg{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:rgba(36,3,4,.45)}
   .seg label{position:relative;cursor:pointer}
   .seg label + label{border-left:1px solid var(--line-soft)}
   .seg input{position:absolute;opacity:0;pointer-events:none}
@@ -187,6 +187,19 @@
   .seg input:checked + span{background:var(--gold-grad);color:var(--maroon-950);font-weight:600}
   .seg input:focus-visible + span{outline:2px solid var(--gold-200);outline-offset:-4px}
   .seg input:disabled + span{opacity:.35;cursor:not-allowed;text-decoration:line-through}
+
+  .cats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .cats label{position:relative;cursor:pointer}
+  .cats input{position:absolute;opacity:0;pointer-events:none}
+  .cats span{
+    display:block;text-align:center;padding:12px 8px;border-radius:10px;
+    border:1px solid var(--line);background:rgba(36,3,4,.45);
+    font-size:18px;font-weight:500;transition:background .15s, border-color .15s, color .15s;
+  }
+  .cats label:hover span{border-color:rgba(243,212,126,.7)}
+  .cats input:checked + span{background:var(--gold-grad);border-color:var(--gold-300);color:var(--maroon-950);font-weight:600}
+  .cats input:focus-visible + span{outline:2px solid var(--gold-200);outline-offset:2px}
+  .cats.invalid span{border-color:#ff9c8a}
 
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 
@@ -333,6 +346,16 @@
         <input id="name" name="name" type="text" autocomplete="name" maxlength="100" required placeholder="Your name">
       </div>
 
+      <fieldset class="field" id="categorySet">
+        <legend>Category</legend>
+        <div class="cats">
+          <label><input type="radio" name="category" value="Family" required><span>Family</span></label>
+          <label><input type="radio" name="category" value="Friends"><span>Friend</span></label>
+          <label><input type="radio" name="category" value="Musicians"><span>Musician</span></label>
+          <label><input type="radio" name="category" value="Special Guest"><span>Special guest</span></label>
+        </div>
+      </fieldset>
+
       <div class="field">
         <label class="lbl" for="phone">WhatsApp number</label>
         <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="24" required placeholder="0803 000 0000">
@@ -348,7 +371,6 @@
         <div class="seg">
           <label><input type="radio" name="guests" value="0" checked><span>Just me</span></label>
           <label><input type="radio" name="guests" value="1"><span>Me + 1</span></label>
-          <label><input type="radio" name="guests" value="2"><span>Me + 2</span></label>
         </div>
         <p class="hint" id="guestsHint" hidden></p>
       </fieldset>
@@ -398,7 +420,7 @@
   ------------------------------------------------------------------- */
   var RSVP_ENDPOINT = "https://script.google.com/macros/s/AKfycbwT-ENQYCNbmynFphW_rjOsPA0tocMZyapVVCEaVss184UEVcWTD2QN6Tg6e3YEqiV_/exec";
   var CAPACITY = 35;
-  var MAX_GUESTS = 2;
+  var MAX_GUESTS = 1;
   var VENUE = "Blue Flame Media, 3 George St, off Apata Street, Somolu, Lagos";
 
   var PREVIEW = !RSVP_ENDPOINT;
@@ -435,10 +457,21 @@
     responseInputs.forEach(function (i) { i.closest(".choice-card").classList.toggle("is-checked", i.checked); });
     var r = currentResponse();
     guestsField.hidden = r !== "yes";
-    if (r) form.querySelectorAll(".choice-card").forEach(function (c) { c.classList.remove("invalid"); });
+    if (r) {
+      form.querySelectorAll(".choice-card").forEach(function (c) { c.classList.remove("invalid"); });
+      responseInputs.forEach(function (i) { i.classList.remove("invalid"); });
+    }
     updateSubmitLabel();
   }
   responseInputs.forEach(function (i) { i.addEventListener("change", syncResponse); });
+
+  function currentCategory() {
+    var c = form.querySelector('input[name="category"]:checked');
+    return c ? c.value : "";
+  }
+  form.querySelectorAll('input[name="category"]').forEach(function (i) {
+    i.addEventListener("change", function () { form.querySelector(".cats").classList.remove("invalid"); });
+  });
 
   /* ---------------- Seats ---------------- */
   function applyStatus(s) {
@@ -512,6 +545,7 @@
     }
     var name = $("name"), phone = $("phone"), email = $("email");
     if (name.value.trim().length < 2) bad(name, "Please enter your name.");
+    if (!currentCategory()) bad(form.querySelector(".cats"), "Please choose your category.");
     var d = digits(phone.value);
     if (d.length < 7 || d.length > 15) bad(phone, "Please enter a valid WhatsApp number.");
     if (email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) bad(email, "That email address doesn't look right.");
@@ -536,6 +570,7 @@
     return {
       response: resp,
       name: $("name").value.trim(),
+      category: currentCategory(),
       phone: $("phone").value.trim(),
       email: $("email").value.trim(),
       guests: resp === "yes" && g ? Number(g.value) : 0,
@@ -605,6 +640,9 @@
   waitlistBtn.addEventListener("click", function () { submit(true); });
 
   /* ---------------- Thank-you view ---------------- */
+  function labelFor(cat) {
+    return { "Family": "Family", "Friends": "Friend", "Musicians": "Musician", "Special Guest": "Special guest" }[cat] || cat;
+  }
   function firstName(n) { return String(n).trim().split(/\s+/)[0]; }
 
   function row(label, value) {
@@ -626,6 +664,7 @@
       var who = data.guests === 0 ? "for you" : "for you and " + data.guests + (data.guests === 1 ? " guest" : " guests");
       msg.textContent = updatedPrefix + "Your seat is reserved " + who + ". We look forward to celebrating with you on Sunday.";
       summary.appendChild(row("Response", "Attending"));
+      summary.appendChild(row("Category", labelFor(data.category)));
       summary.appendChild(row("Party", String(res.partySize || 1 + data.guests)));
       summary.appendChild(row("Date", "Sun, 18 Oct · 3:30 PM"));
       summary.hidden = false;
@@ -659,7 +698,7 @@
 
   /* ---------------- Remember this device's details ---------------- */
   function remember(data) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ name: data.name, phone: data.phone, email: data.email })); } catch (e) {}
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ name: data.name, phone: data.phone, email: data.email, category: data.category })); } catch (e) {}
   }
   try {
     var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
@@ -667,6 +706,10 @@
       $("name").value = saved.name || "";
       $("phone").value = saved.phone || "";
       $("email").value = saved.email || "";
+      if (saved.category) {
+        var ci = form.querySelector('input[name="category"][value="' + saved.category + '"]');
+        if (ci) ci.checked = true;
+      }
     }
   } catch (e) {}
 

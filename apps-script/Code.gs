@@ -14,7 +14,7 @@
 
 var CONFIG = {
   CAPACITY: 35,        // total people allowed in the studio
-  MAX_GUESTS: 1,       // plus-ones per RSVP
+  MAX_GUESTS: 0,       // invitations are personal: no plus-ones
   SHEET_NAME: 'RSVPs',
   SUMMARY_NAME: 'Summary',
   NOTIFY_EMAIL: true,  // email the owner each time someone responds

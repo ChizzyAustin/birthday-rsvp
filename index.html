@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kindly RSVP · Birthday Thanksgiving Studio Session</title>
-<meta name="description" content="Kindly RSVP for the Birthday Thanksgiving Studio Session. Sunday, 18 October 2026, 3:30 PM at Blue Flame Media, Somolu, Lagos.">
+<meta name="description" content="Kindly RSVP for the Birthday Thanksgiving Studio Session. Sunday, 18 October 2026, 3:30 to 6:00 PM at Blue Flame Media, Somolu, Lagos.">
 <meta name="theme-color" content="#360607">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Birthday Thanksgiving · Studio Session · Kindly RSVP">
-<meta property="og:description" content="Sunday, 18 October 2026 · 3:30 PM · Blue Flame Media, Somolu, Lagos. Seating is limited.">
+<meta property="og:description" content="Sunday, 18 October 2026 · 3:30 to 6:00 PM · Blue Flame Media, Somolu, Lagos. Seating is limited.">
 <meta property="og:image" content="https://chizzyaustin.github.io/birthday-rsvp/share.jpg">
 <meta property="og:url" content="https://chizzyaustin.github.io/birthday-rsvp/">
 <meta name="twitter:card" content="summary_large_image">
@@ -243,6 +243,10 @@
   .done .summary span:first-child{font-family:Cinzel, serif;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-300);padding-top:4px}
   .done-actions{display:grid;gap:10px;margin-top:24px}
   .done-actions .btn{margin-top:0}
+  .cal-label{margin:0 0 8px !important;font-family:Cinzel, serif;font-size:11.5px !important;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-300)}
+  .cal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cal-row .btn{padding:14px 8px;font-size:12px;letter-spacing:.08em;white-space:nowrap}
+  @media (max-width: 360px){ .cal-row{grid-template-columns:1fr} }
 
   footer{
     padding:0 24px 40px;text-align:center;
@@ -307,7 +311,7 @@
       <div>
         <dt>When</dt>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M12 13v2.6l1.8 1.1"/></svg>
-        <dd><span class="strong">Sunday, 18 October 2026</span><br><span class="soft">3:30 PM</span></dd>
+        <dd><span class="strong">Sunday, 18 October 2026</span><br><span class="soft">3:30 PM to 6:00 PM</span></dd>
       </div>
       <div>
         <dt>Where</dt>
@@ -400,7 +404,14 @@
       <p id="doneMsg"></p>
       <div class="summary" id="doneSummary"></div>
       <div class="done-actions">
-        <a class="btn directions" id="doneDirections" href="#" target="_blank" rel="noopener">Get directions</a>
+        <div id="calRow">
+          <p class="cal-label">Add it to your calendar</p>
+          <div class="cal-row">
+            <a class="btn" id="calGoogle" href="#" target="_blank" rel="noopener">Google</a>
+            <a class="btn" id="calIcs" href="event.ics" download="birthday-thanksgiving.ics">Apple · Outlook</a>
+          </div>
+        </div>
+        <a class="btn btn-ghost directions" id="doneDirections" href="#" target="_blank" rel="noopener">Get directions</a>
         <button type="button" class="btn btn-ghost" id="editBtn">Change my response</button>
       </div>
     </div>
@@ -440,6 +451,13 @@
 
   var remaining = null;     // seats left, null until known
   var waitlistMode = false; // true when the studio is full
+
+  // Google Calendar link (3:30 to 6:00 PM Lagos = 14:30 to 17:00 UTC)
+  $("calGoogle").href = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+    + "&text=" + encodeURIComponent("Birthday Thanksgiving Studio Session")
+    + "&dates=20261018T143000Z/20261018T170000Z"
+    + "&details=" + encodeURIComponent("Theme: Remembrance.\n" + location.origin + location.pathname)
+    + "&location=" + encodeURIComponent(VENUE);
 
   // Directions links
   var mapsUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(VENUE);
@@ -666,19 +684,22 @@
       summary.appendChild(row("Response", "Attending"));
       summary.appendChild(row("Category", labelFor(data.category)));
       summary.appendChild(row("Party", String(res.partySize || 1 + data.guests)));
-      summary.appendChild(row("Date", "Sun, 18 Oct · 3:30 PM"));
+      summary.appendChild(row("Date", "Sun, 18 Oct · 3:30–6:00 PM"));
       summary.hidden = false;
       $("doneDirections").hidden = false;
+      $("calRow").hidden = false;
     } else if (status === "Waitlist") {
       title.textContent = "You're on the list";
       msg.textContent = updatedPrefix + "The studio is full, so we've added you to the waitlist. We'll reach out on WhatsApp if a seat opens up.";
       summary.hidden = true;
       $("doneDirections").hidden = true;
+      $("calRow").hidden = true;
     } else {
       title.textContent = "Thank you, " + firstName(data.name);
       msg.textContent = updatedPrefix + "Thank you for letting us know. You'll be missed" + (data.note ? ", and your words mean a lot." : ".");
       summary.hidden = true;
       $("doneDirections").hidden = true;
+      $("calRow").hidden = true;
     }
 
     form.hidden = true;

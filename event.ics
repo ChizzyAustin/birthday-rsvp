@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Birthday Thanksgiving RSVP//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:birthday-thanksgiving-studio-session-20261018@chizzyaustin.github.io
+DTSTAMP:20261014T110000Z
+DTSTART:20261018T143000Z
+DTEND:20261018T170000Z
+SUMMARY:Birthday Thanksgiving Studio Session
+LOCATION:Blue Flame Media\, 3 George St\, off Apata Street\, Somolu\, Lagos
+DESCRIPTION:Theme: Remembrance. 3:30 PM to 6:00 PM.\nhttps://chizzyaustin.github.io/birthday-rsvp/
+URL:https://chizzyaustin.github.io/birthday-rsvp/
+BEGIN:VALARM
+TRIGGER:-PT2H
+ACTION:DISPLAY
+DESCRIPTION:Birthday Thanksgiving Studio Session starts in 2 hours
+END:VALARM
+END:VEVENT
+END:VCALENDAR
